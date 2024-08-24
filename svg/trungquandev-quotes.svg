@@ -11,20 +11,20 @@
 					margin: 0;
 					width: 100%;
 					height: 150px;
-          background-color: #20232A;
+          			background-color: #20232A;
 					border-radius: 10px;
 					color: white;
-          line-height: 1.6;
+          			line-height: 1.6;
 				}
-        .quotes-eng {
-          font-size: 18px;
-        }
-        .quotes-vi {
-          font-size: 18px;
-        }
-        .trungquandev-signature {
-          font-size: 16px;
-        }
+				.quotes-eng {
+				font-size: 18px;
+				}
+				.quotes-vi {
+				font-size: 18px;
+				}
+				.trungquandev-signature {
+				font-size: 16px;
+				}
 		</style>
 
 			<div class="container">
