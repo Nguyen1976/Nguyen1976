@@ -2,13 +2,15 @@
 <br>
 <div align="center">
   <img src="https://img.icons8.com/?size=100&id=0OQR1FYCuA9f&format=png&color=000000" alt="VS Code logo" title="VS Code" width="50" />
+  <img src="https://img.icons8.com/?size=100&id=20906&format=png&color=000000" alt="Git logo" title="Git" width="50" />
   <img src="https://img.icons8.com/?size=100&id=zRvbzAjx4VWY&format=png&color=000000" alt="HTML5 logo" title="HTML5" width="50" />
   <img src="https://img.icons8.com/?size=100&id=7gdY5qNXaKC0&format=png&color=000000" alt="CSS3 logo" title="CSS3" width="50" />
   <img src="https://img.icons8.com/?size=100&id=PndQWK6M1Hjo&format=png&color=000000" alt="Bootstrap logo" title="Bootstrap" width="50" />
   <img src="https://img.icons8.com/?size=100&id=CIAZz2CYc6Kc&format=png&color=000000" alt="Tailwind logo" title="Tailwind" width="50" />
   <img src="https://img.icons8.com/?size=100&id=52wKEsyyo49O&format=png&color=000000" alt="JavaScript logo" title="JavaScript" width="50" />
-  <img src="https://img.icons8.com/?size=100&id=20906&format=png&color=000000" alt="Git logo" title="Git" width="50" />
+  <img width="48" height="48" src="https://img.icons8.com/color/48/redux.png" title="redux" alt="Redux toolkit logo" width="50"/>
   <img src="https://img.icons8.com/?size=100&id=asWSSTBrDlTW&format=png&color=000000" alt="React logo" title="React" width="50" />
+  <img width="48" height="48" src="https://img.icons8.com/fluency/48/node-js.png" title="Node Js" alt="Node-js logo" width="50" />
 </div>
 
 <h2 align="center">🔭 Where to find me 🔭</h2>
