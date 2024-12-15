@@ -11,6 +11,7 @@
   <img width="48" height="48" src="https://img.icons8.com/color/48/redux.png" title="redux" alt="Redux toolkit logo" width="50"/>
   <img src="https://img.icons8.com/?size=100&id=asWSSTBrDlTW&format=png&color=000000" alt="React logo" title="React" width="50" />
   <img width="48" height="48" src="https://img.icons8.com/fluency/48/node-js.png" title="Node Js" alt="Node-js logo" width="50" />
+  <img width="50" height="48" src="https://img.icons8.com/color/48/typescript.png" title="TypeScript" alt="typescript logo"/>
 </div>
 
 <h2 align="center">🔭 Where to find me 🔭</h2>
