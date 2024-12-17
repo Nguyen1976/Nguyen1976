@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/3a7d0031-9f3f-409d-81db-04fca9f5e07f)<h2 align="center">🛠 Technologies and Tools 🛠</h2>
+<h2 align="center">🛠 Technologies and Tools 🛠</h2>
 <br>
 <div align="center">
   <img src="https://img.icons8.com/?size=100&id=0OQR1FYCuA9f&format=png&color=000000" alt="VS Code logo" title="VS Code" width="50" />
