@@ -1,3 +1,4 @@
+<img src="https://img.icons8.com/?size=100&id=0OQR1FYCuA9f&format=png&color=000000](https://user-images.githubusercontent.com/74038190/225813708-98b745f2-7d22-48cf-9150-083f1b00d6c9.gif" alt="banner" title="banner" />
 <h2 align="center">🛠 Technologies and Tools 🛠</h2>
 <br>
 <div align="center">
