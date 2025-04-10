@@ -30,6 +30,9 @@
   <a href="https://phenikaa-uni.edu.vn/vi" target="_top">
     <img src="./img/logoPKA.png" alt="Phenikaa Uni" width="70" />
   </a>
+  <a href="https://leetcode.com/u/Nguyen1976/" target="_top">
+    <img src="https://img.icons8.com/external-tal-revivo-shadow-tal-revivo/24/external-level-up-your-coding-skills-and-quickly-land-a-job-logo-shadow-tal-revivo.png" alt="Leet Code" width="70" />
+  </a>
 </div>
 
 <h2 align="center">📑 My Favorites Quote 📑</h2>
