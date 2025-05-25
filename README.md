@@ -45,12 +45,12 @@
 <!-- Thống kê ngôn ngữ -->
 <!-- ![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=Nguyen1976&layout=compact&theme=dark) -->
 <p align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=Nguyen1976&show_icons=true&theme=tokyonight" height="180" />
-  <img src="https://streak-stats.demolab.com?user=Nguyen1976&theme=tokyonight" height="180"/>
+  <img src="https://github-readme-stats.vercel.app/api?username=Nguyen1976&show_icons=true&theme=tokyonight" height="150" />
+  <img src="https://streak-stats.demolab.com?user=Nguyen1976&theme=tokyonight" height="150"/>
 </p>
 
 <!-- Biểu đồ hoạt động -->
-![Nguyen1976's github activity graph](https://github-readme-activity-graph.vercel.app/graph?username=Nguyen1976&theme=react-dark)
+<!--![Nguyen1976's github activity graph](https://github-readme-activity-graph.vercel.app/graph?username=Nguyen1976&theme=react-dark)-->
 
 
 
