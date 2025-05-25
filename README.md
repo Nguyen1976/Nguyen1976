@@ -34,10 +34,12 @@
     <img src="https://img.icons8.com/external-tal-revivo-shadow-tal-revivo/24/external-level-up-your-coding-skills-and-quickly-land-a-job-logo-shadow-tal-revivo.png" alt="Leet Code" width="70" />
   </a>
 </div>
-<h2 align="center">📑 My Languages 📑</h2>
-![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=Nguyen1976&layout=compact)
 
 <h2 align="center">📑 My Favorites Quote 📑</h2>
 <a href="#" target="_blank">
   <img src="svg/nguyen-quotes.svg" width="846" height="150" alt="Quotes" />
 </a>
+
+## 📄 My Languages 📄
+
+![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=Nguyen1976&layout=compact)
