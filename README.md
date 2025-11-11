@@ -1,7 +1,5 @@
 <img src="https://user-images.githubusercontent.com/74038190/225813708-98b745f2-7d22-48cf-9150-083f1b00d6c9.gif" alt="banner" title="banner" />
-<h1><img src="https://emojis.slackmojis.com/emojis/images/1531849430/4246/blob-sunglasses.gif?1531849430" width="30"/> Hey! Nice to see you.</h1>
-<p>Welcome to my page! </br> I'm Thomas, Fullstack developer from <img src="https://img.icons8.com/color/48/vietnam.png" width="13"/> <b>Ha Noi, Viet Nam</b>. </p>
-<h3>Things I code with</h3>
+<h2 align="center">🛠 Technologies and Tools 🛠</h2>
 <br>
 <div align="center">
   <img src="https://img.icons8.com/?size=100&id=0OQR1FYCuA9f&format=png&color=000000" alt="VS Code logo" title="VS Code" width="50" />
@@ -54,7 +52,3 @@
 
 <!-- Biểu đồ hoạt động -->
 <!--![Nguyen1976's github activity graph](https://github-readme-activity-graph.vercel.app/graph?username=Nguyen1976&theme=react-dark)-->
-
-
-
-
