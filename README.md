@@ -50,5 +50,17 @@
   <img src="https://streak-stats.demolab.com?user=Nguyen1976&theme=tokyonight" height="150"/>
 </p>
 
+<br>
+
+<p align="center">
+  <a href="https://github.com/kittinan/spotify-github-profile">
+    <img src="https://spotify-github-profile.kittinanx.com/api/view?uid=31srbzvb27scwh7hglzkmnknajpq&cover_image=true&theme=default&show_offline=true&background_color=121212&interchange=false&profanity=false">
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&height=60&section=footer" />
+</p>
+
 <!-- Biểu đồ hoạt động -->
 <!--![Nguyen1976's github activity graph](https://github-readme-activity-graph.vercel.app/graph?username=Nguyen1976&theme=react-dark)-->
