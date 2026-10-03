@@ -41,7 +41,7 @@ def calendar_query(start, today):
     y{y}: contributionsCollection(from: "{lo}T00:00:00Z", to: "{hi}T23:59:59Z") {{
       contributionCalendar {{ weeks {{ contributionDays {{ date contributionCount }} }} }}
     }}""")
-    return "query($login: String!) {\n  user(login: $login) {" + "".join(parts) + "\n  }\n}"
+    return "query($login: String!) {\n  user(login: $login) {\n    name" + "".join(parts) + "\n  }\n}"
 
 
 def fetch(token, today):
@@ -49,13 +49,14 @@ def fetch(token, today):
     start = today - datetime.timedelta(weeks=52)
     start -= datetime.timedelta(days=(start.weekday() + 1) % 7)
     user = graphql(token, calendar_query(start, today), {"login": USER})["user"]
+    name = user.pop("name") or USER
     days = {}
     for coll in user.values():
         for w in coll["contributionCalendar"]["weeks"]:
             for d in w["contributionDays"]:
                 days[datetime.date.fromisoformat(d["date"])] = d["contributionCount"]
-    return [[d.isoformat(), days.get(d, 0)] for d in
-            (start + datetime.timedelta(days=i) for i in range((today - start).days + 1))]
+    return name, [[d.isoformat(), days.get(d, 0)] for d in
+                  (start + datetime.timedelta(days=i) for i in range((today - start).days + 1))]
 
 
 def main():
@@ -64,11 +65,12 @@ def main():
         sys.exit("error: set PROFILE_TOKEN or GITHUB_TOKEN")
     today = datetime.datetime.now(datetime.timezone.utc).date()
     try:
-        days = fetch(token, today)
+        name, days = fetch(token, today)
     except Exception as ex:  # noqa: BLE001
         sys.exit(f"error: GitHub fetch failed, keeping previous calendar: {ex}")
     DATA.mkdir(parents=True, exist_ok=True)
-    (DATA / "calendar.json").write_text(json.dumps({"updated": today.isoformat(), "days": days}, indent=1) + "\n")
+    (DATA / "calendar.json").write_text(json.dumps({"updated": today.isoformat(), "name": name, "days": days},
+                                                   indent=1, ensure_ascii=False) + "\n")
     print(f"calendar: {len(days)} days, {sum(n for _, n in days)} contributions")
 
 

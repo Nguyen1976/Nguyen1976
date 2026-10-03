@@ -1,109 +1,50 @@
 """Renders svg/contribution-city.svg from data/calendar.json and refreshes its README alt text.
 
-An isometric night skyline with one building per day of the last year: busier days are
-taller and brighter. Run fetch.py first; this script only reads the data and draws.
+A 3D city on a floating slab, one building per day of the last year: busier days are
+taller and brighter. Styled as a sibling of the github-readme-stats "tokyonight" cards
+next to it on the profile. Run fetch.py first; this script only reads the data and draws.
 
-Adapted from https://github.com/georgekobaidze/georgekobaidze (tools/profile/render.py),
-shared by its author with "feel free to fork it and build your own skyline".
+The idea and the window/RNG approach come from https://github.com/georgekobaidze/georgekobaidze
+(tools/profile/render.py), shared by its author with "feel free to fork it and build your own skyline".
 """
-import base64, datetime, hashlib, html, io, json, math, pathlib, re
-
-from fontTools import subset
-from fontTools.ttLib import TTFont
+import datetime, hashlib, html, json, math, pathlib, re
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 DATA = HERE / "data"
 OUT = ROOT / "svg" / "contribution-city.svg"
 README = ROOT / "README.md"
-FONT_DIR = HERE / "fonts"
-CYAN, GREEN = "#00d9ff", "#3fb950"
-W, H, M = 880, 720, 16     # width, height, transparent margin around the frame (room for the glow)
-FL, FR = M, W - M          # frame left / right
-FT, FB = M, H - M          # frame top / bottom
-X = 52                     # text left edge
-DY = 20                    # everything inside the frame sits this far below the top edge
 e = html.escape
 
+# tokyonight, exactly as github-readme-stats draws it
+BG, BORDER, TITLE, TEXT, ICON = "#1a1b27", "#e4e2e2", "#70a5fd", "#38bdae", "#bf91f3"
+FONT = "'Segoe UI', Ubuntu, \"Helvetica Neue\", Sans-Serif"
+ROOFS = ["#34497f", "#4a6fd1", TITLE, ICON]          # activity level 1–4: navy → blue → purple
+SLAB_TOP, SLAB_LEFT, SLAB_FRONT = "#24283b", "#1f2335", "#16161e"
+LOT, WINDOW = "#2b3049", "#c0caf5"
 
-# ─────────────────────────────── frame ────────────────────────────────
-def visible(markup):
-    """The characters a piece of SVG markup actually displays (so the font subset never misses one)."""
-    return html.unescape(re.sub(r"<[^>]+>", "", markup))
+# geometry: a 3/4 view where weeks run right and slightly up, weekdays run toward the viewer
+W = 960                                    # card width; shown at ~744px so text matches the stats cards
+U = (14.6, -4.1)                           # one week along the ground
+V = (9.4, 6.4)                             # one weekday along the ground
+INSET = .16                                # gap between buildings (the streets), in cells
+HMAX = 128                                 # tallest building, px
+SLAB_PAD, SLAB_T = .7, 20                  # slab margin (cells) and thickness (px)
+SHADOW = (.034, .012)                      # shadow length per px of height, in (week, day) cells
 
-
-def faces(text, weights=(400, 700)):
-    """JetBrains Mono, subset to the glyphs in use and embedded, so the SVG looks the same everywhere."""
-    text += "0123456789"
-    out = []
-    for w in weights:
-        f = TTFont(FONT_DIR / f"jetbrains-mono-latin-{w}-normal.woff2", recalcTimestamp=False)  # fixed timestamp keeps output byte-identical between runs
-        o = subset.Options(); o.flavor = "woff2"; o.layout_features = []
-        s = subset.Subsetter(o); s.populate(text=text); s.subset(f)
-        b = io.BytesIO(); f.flavor = "woff2"; f.save(b)
-        out.append(f"@font-face{{font-family:'JBM';font-weight:{w};src:url(data:font/woff2;base64,"
-                   f"{base64.b64encode(b.getvalue()).decode()}) format('woff2')}}")
-    return "".join(out)
-
-
-BASE_CSS = f"""text{{font-family:'JBM',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px}}
-.dim{{fill:#8b949e}}.cy{{fill:{CYAN}}}.fg{{fill:#c9d1d9}}.gr{{fill:{GREEN}}}.wh{{fill:#f0fbff}}
-@keyframes fadein{{from{{opacity:0;transform:translateX(-6px)}}to{{opacity:1;transform:none}}}}
-.ln{{animation:fadein .35s ease-out both}}"""
-
-DEFS = f"""<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="{CYAN}" stroke-opacity=".06"/></pattern>
-<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
-<filter id="g" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="4"/></filter>"""
+ICONS = {   # octicons, 16px
+    "commit": "M11.93 8.5a4.002 4.002 0 0 1-7.86 0H.75a.75.75 0 0 1 0-1.5h3.32a4.002 4.002 0 0 1 7.86 0h3.32a.75.75 0 0 1 0 1.5Zm-1.43-.75a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z",
+    "flame": "M9.533.753V.752c.217 2.385 1.463 3.626 2.653 4.81C13.37 6.74 14.498 7.863 14.498 10c0 3.5-3 6-6.5 6S1.5 13.512 1.5 10c0-1.298.536-2.56 1.425-3.286.376-.308.862 0 1.035.454C4.46 8.487 5.581 8.419 6 8c.282-.282.341-.811-.003-1.5C4.34 3.187 7.035.75 8.77.146c.39-.137.726.194.763.607ZM7.998 14.5c2.832 0 5-1.98 5-4.5 0-1.463-.68-2.19-1.879-3.383l-.036-.037c-1.013-1.008-2.3-2.29-2.834-4.434-.322.256-.63.579-.864.953-.432.696-.621 1.58-.046 2.73.473.947.67 2.284-.278 3.232-.61.61-1.545.84-2.403.633a2.79 2.79 0 0 1-1.436-.874A3.198 3.198 0 0 0 3 10c0 2.53 2.164 4.5 4.998 4.5Z",
+    "calendar": "M4.75 0a.75.75 0 0 1 .75.75V2h5V.75a.75.75 0 0 1 1.5 0V2h1.25c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 13.25 16H2.75A1.75 1.75 0 0 1 1 14.25V3.75C1 2.784 1.784 2 2.75 2H4V.75A.75.75 0 0 1 4.75 0ZM2.5 7.5v6.75c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V7.5Zm10.75-4H2.75a.25.25 0 0 0-.25.25V6h11V3.75a.25.25 0 0 0-.25-.25Z",
+}
 
 
-def frame_svg(body, *, title, desc, css="", defs=""):
-    edge = f"M{FL} {FT}H{FR}V{FB}H{FL}Z"
-    corners = (f'<path d="M{FL-7} {FT+18}V{FT-7}H{FL+18}"/><path d="M{FR-18} {FT-7}H{FR+7}V{FT+18}"/>'
-               f'<path d="M{FL-7} {FB-18}V{FB+7}H{FL+18}"/><path d="M{FR-18} {FB+7}H{FR+7}V{FB-18}"/>')
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="t d">
-<title id="t">{e(title)}</title>
-<desc id="d">{e(desc)}</desc>
-<style>
-{faces(visible(body))}
-{BASE_CSS}
-{css}
-@media (prefers-reduced-motion:reduce){{*{{animation:none!important}}}}
-</style>
-<defs>
-{DEFS}
-{defs}
-</defs>
-<path d="{edge}" fill="none" stroke="{CYAN}" stroke-width="3" opacity=".55" filter="url(#glow)"/>
-<rect x="{FL}" y="{FT}" width="{FR-FL}" height="{FB-FT}" fill="#03040a"/>
-<rect x="{FL}" y="{FT}" width="{FR-FL}" height="{FB-FT}" fill="url(#grid)"/>
-<g transform="translate(0 {DY})">
-{body}
-</g>
-<path d="{edge}" fill="none" stroke="{CYAN}" stroke-width="1.2"/>
-<g fill="none" stroke="{CYAN}" stroke-width="2">{corners}</g>
-</svg>
-'''
-
-
-def heading(y, name, counter):
-    return f'''<text x="{X}" y="{y}" font-weight="700" fill="{CYAN}" filter="url(#g)" opacity=".8" style="font-size:20px">~/</text>
-<text x="{X}" y="{y}" font-weight="700" style="font-size:20px"><tspan class="cy">~/</tspan><tspan class="wh">{e(name)}</tspan></text>
-<text x="{FR-36}" y="{y}" text-anchor="end" letter-spacing="2" fill="#6e7681" style="font-size:12px">{e(counter)}</text>
-<line x1="{X}" y1="{y+14}" x2="{FR-36}" y2="{y+14}" stroke="{CYAN}" stroke-opacity=".4"/>
-<line x1="{X}" y1="{y+14}" x2="{X+120}" y2="{y+14}" stroke="{CYAN}" stroke-width="2"/>
-<line x1="{X}" y1="{y+14}" x2="{X+120}" y2="{y+14}" stroke="{CYAN}" stroke-width="3" filter="url(#g)"/>'''
-
-
-# ─────────────────────────── contribution city ────────────────────────
-CITY_TW, CITY_TH = 25, 12.5                  # iso tile width / height
-CITY_OX, CITY_OY = 152.5, 262                # grid origin
-CITY_HMAX = 118                              # tallest building, px
-ROOFS = ["#0c2d6b", "#1554c0", "#2f81f7", "#1fd5ff"]   # navy → electric blue
-WIN_ON, WIN_ON_SIDE, WIN_OFF = "#7df9ff", "#4cc9f0", "#111827"
-
-
-def _p(x, y):
-    return f"{x:.1f},{y:.1f}"
+# ─────────────────────────────── helpers ──────────────────────────────
+def mix(c1, c2, t):
+    """Blend two #rrggbb colours: t=0 gives c1, t=1 gives c2."""
+    a = [int(c1[i:i + 2], 16) for i in (1, 3, 5)]
+    b = [int(c2[i:i + 2], 16) for i in (1, 3, 5)]
+    return "#%02x%02x%02x" % tuple(round(x + (y - x) * t) for x, y in zip(a, b))
 
 
 def _rng(seed):
@@ -123,13 +64,38 @@ def _levels(counts):
     return [q(.25), q(.5), q(.75)]
 
 
+def path(*pts):
+    return "M" + "L".join(f"{x:.1f},{y:.1f}" for x, y in pts) + "Z"
+
+
+def up(p, h):
+    return p[0], p[1] - h
+
+
+def hull(pts):
+    """Convex hull (monotone chain), for building shadows."""
+    pts = sorted(set(pts))
+    cross = lambda o, a, b: (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    lo, hi = [], []
+    for p in pts:
+        while len(lo) >= 2 and cross(lo[-2], lo[-1], p) <= 0:
+            lo.pop()
+        lo.append(p)
+    for p in reversed(pts):
+        while len(hi) >= 2 and cross(hi[-2], hi[-1], p) <= 0:
+            hi.pop()
+        hi.append(p)
+    return lo[:-1] + hi[:-1]
+
+
 def summary(days):
     total = sum(n for _, n in days)
     busiest_d, busiest_n = max(days, key=lambda t: t[1]) if days else (None, 0)
     return total, busiest_d, busiest_n, sum(1 for _, n in days if n)
 
 
-def build_city(calendar, updated):
+# ──────────────────────────────── city ────────────────────────────────
+def build_city(name, calendar, updated):
     days = [(datetime.date.fromisoformat(d), n) for d, n in calendar]
     counts = [n for _, n in days]
     total, busiest_d, busiest_n, active = summary(days)
@@ -137,95 +103,145 @@ def build_city(calendar, updated):
     lv = _levels(counts)
     rnd = _rng(f"{updated}-{total}")
     start = days[0][0]
+    weeks = (days[-1][0] - start).days // 7 + 1
+
+    # place the slab: centred, with room above its back edge for the tallest building
+    left = -SLAB_PAD * (U[0] + V[0])
+    right = (weeks + SLAB_PAD) * U[0] + (7 + SLAB_PAD) * V[0]
+    ox = (W - (right - left)) / 2 - left + 12
+    oy = 34 + HMAX + (weeks + SLAB_PAD) * -U[1] + SLAB_PAD * V[1]
+    P = lambda a, b: (ox + a * U[0] + b * V[0], oy + a * U[1] + b * V[1])
+    bottom = P(-SLAB_PAD, 7 + SLAB_PAD)[1] + SLAB_T
+    H = int(math.ceil(bottom + 34))
+
+    # the slab: top, lit left side, darker front side, and a soft shadow beneath
+    s0, s1 = -SLAB_PAD, weeks + SLAB_PAD
+    t0, t1 = -SLAB_PAD, 7 + SLAB_PAD
+    top = [P(s0, t0), P(s1, t0), P(s1, t1), P(s0, t1)]
+    down = lambda p: (p[0], p[1] + SLAB_T)
+    outline = [top[0], top[1], top[2], down(top[2]), down(top[3]), down(top[0])]
+    slab = (f'<path d="{path(*((x, y + 16) for x, y in outline))}" fill="#000" opacity=".5" filter="url(#soft)"/>'
+            f'<path d="{path(top[0], top[3], down(top[3]), down(top[0]))}" fill="{SLAB_LEFT}"/>'
+            f'<path d="{path(top[3], top[2], down(top[2]), down(top[3]))}" fill="{SLAB_FRONT}"/>'
+            f'<path d="{path(*top)}" fill="{SLAB_TOP}"/>'
+            f'<path d="M{top[0][0]:.1f},{top[0][1]:.1f}L{top[3][0]:.1f},{top[3][1]:.1f}L{top[2][0]:.1f},{top[2][1]:.1f}" '
+            f'fill="none" stroke="#3b4261" stroke-width="1"/>')
+
+    # month names painted on the slab's front side
+    un = math.hypot(*U)
+    months, seen = [], set()
+    for d, _ in days:
+        if d.day <= 7 and (d.year, d.month) not in seen and (d - start).days // 7 < weeks - 1:
+            seen.add((d.year, d.month))
+            x, y = P((d - start).days // 7 + .5, t1)
+            months.append(f'<text transform="matrix({U[0]/un:.4f} {U[1]/un:.4f} 0 1 {x:.1f} {y + SLAB_T * .72:.1f})" '
+                          f'class="mo">{d:%b}</text>')
 
     cells = []
     for d, n in days:
         idx = (d - start).days
-        cells.append((idx // 7, (d.weekday() + 1) % 7, n))      # week column, Sunday = 0
-    cells.sort(key=lambda c: (c[0] + c[1], c[0]))                 # back to front
+        cells.append((idx // 7, (d.weekday() + 1) % 7, n, d))      # week, weekday (Sunday = 0)
+    cells.sort(key=lambda c: (P(c[0], c[1])[1], c[0]))                 # back to front
 
-    shapes, flick = [], 0
-    for w, dow, n in cells:
-        cx = CITY_OX + (w - dow) * CITY_TW / 2
-        cy = CITY_OY + (w + dow) * CITY_TH / 2
-        L, R = (cx - CITY_TW / 2, cy), (cx + CITY_TW / 2, cy)
-        T, B = (cx, cy - CITY_TH / 2), (cx, cy + CITY_TH / 2)
+    lots, shadows, blocks = [], [], []
+    beacon = ""
+    for w, dow, n, d in cells:
+        a0, a1, b0, b1 = w + INSET, w + 1 - INSET, dow + INSET, dow + 1 - INSET
+        A, Bk, C, D = P(a0, b0), P(a1, b0), P(a1, b1), P(a0, b1)   # back-left, back-right, front-right, front-left
         if n == 0:
-            shapes.append(f'<path d="M{_p(*T)}L{_p(*R)}L{_p(*B)}L{_p(*L)}Z" fill="#161b22" stroke="#0d1117" stroke-width=".6"/>')
+            lots.append(path(A, Bk, C, D))
             continue
-        h = 8 + (CITY_HMAX - 8) * math.sqrt(n / peak)
+        h = 6 + (HMAX - 6) * math.sqrt(n / peak)
         level = sum(n > t for t in lv)
-        Tu, Ru, Bu, Lu = [(x, y - h) for x, y in (T, R, B, L)]
-        shapes.append(f'<path d="M{_p(*L)}L{_p(*B)}L{_p(*Bu)}L{_p(*Lu)}Z" fill="#1a2440"/>'
-                      f'<path d="M{_p(*B)}L{_p(*R)}L{_p(*Ru)}L{_p(*Bu)}Z" fill="#111831"/>'
-                      f'<path d="M{_p(*Tu)}L{_p(*Ru)}L{_p(*Bu)}L{_p(*Lu)}Z" fill="{ROOFS[level]}"/>')
-        on, side, off, fl = [], [], [], []
-        for face, (a, b) in (("l", (L, B)), ("r", (B, R))):
-            for r in range(int((h - 6) // 7)):
-                v0 = 5 + r * 7
-                for u0 in (.18, .58):
-                    lit = next(rnd) < .55
-                    if not lit and next(rnd) < .5:
-                        continue
-                    pts = [(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u - v)
-                           for u, v in ((u0, v0), (u0 + .26, v0), (u0 + .26, v0 + 3.2), (u0, v0 + 3.2))]
-                    seg = "M" + "L".join(_p(*q) for q in pts) + "Z"
-                    if not lit:
-                        off.append(seg)
-                    elif next(rnd) < .03:
-                        fl.append((seg, face))
-                    else:
-                        (on if face == "l" else side).append(seg)
-        if off:
-            shapes.append(f'<path d="{"".join(off)}" fill="{WIN_OFF}"/>')
-        if on:
-            shapes.append(f'<path d="{"".join(on)}" fill="{WIN_ON}"/>')
-        if side:
-            shapes.append(f'<path d="{"".join(side)}" fill="{WIN_ON_SIDE}"/>')
-        for seg, face in fl:
-            flick += 1
-            shapes.append(f'<path class="f{flick % 3}" d="{seg}" fill="{WIN_ON if face == "l" else WIN_ON_SIDE}"/>')
+        roof = ROOFS[level]
+        sa, sb = SHADOW[0] * h, SHADOW[1] * h
+        shadows.append(path(*hull([A, Bk, C, D] + [P(a + sa, b + sb) for a, b in ((a0, b0), (a1, b0), (a1, b1), (a0, b1))])))
 
-    # night sky in the empty top-right corner: stars, moon, a plane crossing
-    stars = []
-    for i in range(46):
-        x, y = 470 + next(rnd) * 350, 118 + next(rnd) * 150
-        if x > 700 and y < 215:           # keep the moon clear
-            continue
-        cls = f' class="s{i % 3}"' if i % 3 == 0 else ""
-        stars.append(f'<circle{cls} cx="{x:.1f}" cy="{y:.1f}" r="{(.6, .8, 1.1)[i % 3]}" fill="#c9d1d9" opacity="{.35 + next(rnd) * .5:.2f}"/>')
-    info = [f'<tspan class="cy" font-weight="700">{total:,}</tspan> contributions · last 365 days',
-            f'busiest day <tspan class="fg">{busiest_d:%b} {busiest_d.day}</tspan> · {busiest_n}' if busiest_n else "",
-            f'{active} active days']
-    info_svg = "".join(f'<text x="{FR-36}" y="{300 + i*20}" text-anchor="end" class="dim" style="font-size:12px">{t}</text>'
-                       for i, t in enumerate(info) if t)
-    legend = "".join(f'<rect x="{X + 52 + i*16}" y="{642}" width="11" height="11" fill="{c}"/>'
-                     for i, c in enumerate(["#161b22"] + ROOFS))
-    body = heading(44, "contribution-city", f"// {updated}") + f'''
-<g class="ln" style="animation-delay:.15s"><text x="{X}" y="96" class="dim"><tspan class="gr">$</tspan> render-city --last 365d <tspan fill="#484f58"># one building per day</tspan></text></g>
-<g>{"".join(stars)}</g>
-<circle cx="{FR-80}" cy="{160}" r="40" fill="url(#moonglow)"/>
-<circle cx="{FR-80}" cy="{160}" r="14" fill="#e6edf3"/>
-<circle cx="{FR-74}" cy="{155}" r="12.5" fill="#03040a"/>
-<g class="plane"><g transform="translate(0 132)"><rect x="0" y="0" width="14" height="2" rx="1" fill="#484f58"/><circle class="bl" cx="0" cy="1" r="1.6" fill="#ff7b72"/><circle class="bl" cx="14" cy="1" r="1.6" fill="#f0f6fc" style="animation-delay:.7s"/></g></g>
-{info_svg}
-{"".join(shapes)}
-<text x="{X}" y="{652}" class="dim" style="font-size:11px">quiet</text>{legend}<text x="{X + 52 + 5*16 + 6}" y="{652}" class="dim" style="font-size:11px">skyscraper</text>'''
-    css = f"""@keyframes tw{{0%,100%{{opacity:.9}}50%{{opacity:.15}}}}
-@keyframes fl{{0%,40%,100%{{opacity:1}}45%,60%{{opacity:.1}}}}
-@keyframes blink{{0%,90%,100%{{opacity:0}}93%{{opacity:1}}}}
-@keyframes fly{{from{{transform:translate({FL - 40}px,0)}}to{{transform:translate({FR + 40}px,-30px)}}}}
-.s0{{animation:tw 3s infinite}}
-.f0{{animation:fl 5s infinite}}.f1{{animation:fl 7s infinite 2s}}.f2{{animation:fl 9s infinite 4s}}
-.plane{{animation:fly 26s linear infinite}}.bl{{animation:blink 1.4s infinite}}"""
-    defs = '<radialGradient id="moonglow"><stop offset="0" stop-color="#f0f6fc" stop-opacity=".22"/><stop offset="1" stop-color="#f0f6fc" stop-opacity="0"/></radialGradient>'
-    return frame_svg(body, title="Contribution city", desc=city_alt(days), css=css, defs=defs)
+        parts = [f'<path d="{path(A, D, up(D, h), up(A, h))}" fill="url(#l{level})"/>',      # lit left face
+                 f'<path d="{path(D, C, up(C, h), up(D, h))}" fill="url(#f{level})"/>',      # front face
+                 f'<path d="{path(*(up(p, h) for p in (A, Bk, C, D)))}" fill="{roof}"/>',
+                 f'<path d="M{up(A, h)[0]:.1f},{up(A, h)[1]:.1f}L{up(D, h)[0]:.1f},{up(D, h)[1]:.1f}L{up(C, h)[0]:.1f},{up(C, h)[1]:.1f}" '
+                 f'fill="none" stroke="{mix(roof, "#ffffff", .35)}" stroke-width=".8" opacity=".8"/>']
+        # windows: a grid on both visible faces, more of them lit on busier days
+        lit_p = .25 + .15 * level
+        wins = []
+        for (p0, p1), cols in (((A, D), (.3,)), ((D, C), (.2, .58))):
+            for r in range(int((h - 7) // 7)):
+                v0 = 5 + r * 7
+                for u0 in cols:
+                    if next(rnd) > lit_p:
+                        continue
+                    du = .22 if len(cols) == 2 else .4
+                    q = [(p0[0] + (p1[0] - p0[0]) * u, p0[1] + (p1[1] - p0[1]) * u - v)
+                         for u, v in ((u0, v0 + 3), (u0 + du, v0 + 3), (u0 + du, v0), (u0, v0))]
+                    wins.append(path(*q))
+        if wins:
+            parts.append(f'<path d="{"".join(wins)}" fill="{WINDOW}" opacity="{.45 + .12 * level:.2f}"/>')
+        blocks.append(f'<g class="b" style="animation-delay:{.25 + w * .022:.3f}s">{"".join(parts)}</g>')
+
+        if (d, n) == (busiest_d, busiest_n) and not beacon:
+            tip = up(((A[0] + C[0]) / 2, (A[1] + C[1]) / 2), h)
+            beacon = (f'<g class="b" style="animation-delay:{.25 + w * .022:.3f}s">'
+                      f'<line x1="{tip[0]:.1f}" y1="{tip[1]:.1f}" x2="{tip[0]:.1f}" y2="{tip[1] - 14:.1f}" stroke="{mix(ICON, BG, .3)}" stroke-width="1.2"/>'
+                      f'<circle class="beacon" cx="{tip[0]:.1f}" cy="{tip[1] - 15:.1f}" r="6" fill="{ICON}" opacity=".5" filter="url(#glow)"/>'
+                      f'<circle class="beacon" cx="{tip[0]:.1f}" cy="{tip[1] - 15:.1f}" r="2.2" fill="#f5e9ff"/></g>')
+
+    # stats, set like the stats card rows: purple icon, teal label, bold value
+    rows = [("commit", "Contributions (last year):", f"{total:,}"),
+            ("flame", "Busiest day:", f"{busiest_d:%b} {busiest_d.day} · {busiest_n}" if busiest_n else "—"),
+            ("calendar", "Active days:", f"{active}")]
+    sx, sy = W - 330, H - 34 - 25 * len(rows) + 6
+    stats = "".join(
+        f'<g class="fade" style="animation-delay:{.45 + i * .15:.2f}s" transform="translate({sx} {sy + i * 25})">'
+        f'<svg x="0" y="0" width="16" height="16" viewBox="0 0 16 16"><path fill="{ICON}" fill-rule="evenodd" d="{ICONS[icon]}"/></svg>'
+        f'<text class="stat" x="25" y="12.5">{e(label)}</text><text class="stat bold" x="215" y="12.5">{e(value)}</text></g>'
+        for i, (icon, label, value) in enumerate(rows))
+
+    grads = "".join(
+        f'<linearGradient id="l{i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{mix(r, BG, .25)}"/><stop offset="1" stop-color="{mix(r, BG, .72)}"/></linearGradient>'
+        f'<linearGradient id="f{i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{mix(r, BG, .55)}"/><stop offset="1" stop-color="{mix(r, BG, .85)}"/></linearGradient>'
+        for i, r in enumerate(ROOFS))
+    desc = city_alt(days)
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="t d">
+<title id="t">{e(name)}'s Contribution City</title>
+<desc id="d">{e(desc)}</desc>
+<style>
+.header{{font:600 18px {FONT};fill:{TITLE}}}
+.sub{{font:400 13px {FONT};fill:{TEXT};opacity:.75}}
+.stat{{font:600 14px {FONT};fill:{TEXT}}}.bold{{font-weight:700}}
+.mo{{font:600 10px {FONT};fill:{TEXT};opacity:.55}}
+@keyframes fadeIn{{from{{opacity:0}}to{{opacity:1}}}}
+@keyframes rise{{from{{transform:scaleY(0)}}to{{transform:scaleY(1)}}}}
+@keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:.25}}}}
+.fade{{animation:fadeIn .6s ease-in-out both}}
+.b{{transform-box:fill-box;transform-origin:50% 100%;animation:rise .7s cubic-bezier(.2,.8,.2,1) both}}
+.beacon{{animation:pulse 1.8s ease-in-out infinite}}
+@media (prefers-reduced-motion:reduce){{*{{animation:none!important}}}}
+</style>
+<defs>
+<filter id="soft" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+<filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3"/></filter>
+<clipPath id="ground"><path d="{path(*top)}"/></clipPath>
+{grads}
+</defs>
+<rect x="0.5" y="0.5" rx="4.5" width="{W - 1}" height="{H - 1}" fill="{BG}" stroke="{BORDER}"/>
+<g class="fade"><text class="header" x="25" y="35">{e(name)}'s Contribution City</text>
+<text class="sub" x="25" y="57">one building per day · taller and brighter on busier days</text></g>
+{slab}
+{"".join(months)}
+<path d="{"".join(lots)}" fill="{LOT}"/>
+<g class="fade" style="animation-delay:1.2s"><path d="{"".join(shadows)}" fill="#0b0c14" opacity=".55" clip-path="url(#ground)"/></g>
+{"".join(blocks)}
+{beacon}
+{stats}
+</svg>
+'''
 
 
 def city_alt(days):
-    total, busiest_d, busiest_n, _ = summary(days)
-    text = (f"Contribution city: an isometric night skyline with one building per day of the last year, "
-            f"taller and brighter for busier days. {total:,} contributions")
+    total, busiest_d, busiest_n, active = summary(days)
+    text = (f"Contribution city: a 3D skyline with one building per day of the last year, "
+            f"taller and brighter for busier days. {total:,} contributions over {active} active days")
     if busiest_n:
         text += f", busiest day {busiest_d:%B} {busiest_d.day} with {busiest_n}"
     return text + "."
@@ -234,7 +250,7 @@ def city_alt(days):
 def main():
     cal = json.loads((DATA / "calendar.json").read_text())
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(build_city(cal["days"], cal["updated"]))
+    OUT.write_text(build_city(cal.get("name") or "Nguyen1976", cal["days"], cal["updated"]))
     print(f"wrote {OUT.relative_to(ROOT)}")
 
     # keep the README alt text in step with today's numbers, for screen readers

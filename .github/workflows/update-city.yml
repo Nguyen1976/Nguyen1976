@@ -28,10 +28,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      # pinned so the embedded fonts stay byte-identical between runs
-      - name: Install dependencies
-        run: pip install fonttools==4.62.1 brotli==1.2.0
-
       - name: Fetch contributions
         env:
           PROFILE_TOKEN: ${{ secrets.PROFILE_TOKEN }}   # optional: adds private contributions
