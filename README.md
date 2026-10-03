@@ -53,7 +53,7 @@
 <br>
 
 <p align="center">
-  <img src="./svg/contribution-city.svg" width="100%" alt="Contribution city: an isometric night skyline with one building per day of the last year, taller and brighter for busier days. 2,173 contributions, busiest day November 30 with 52.">
+  <img src="./svg/contribution-city.svg" width="100%" alt="Contribution city: an isometric night skyline with one building per day of the last year, taller and brighter for busier days. 2,174 contributions, busiest day November 30 with 52.">
 </p>
 
 <!-- Biểu đồ hoạt động -->
