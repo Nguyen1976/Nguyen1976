@@ -53,12 +53,7 @@
 <br>
 
 <p align="center">
-    <img src="https://spotify-github-profile.kittinanx.com/api/view?uid=31srbzvb27scwh7hglzkmnknajpq&cover_image=true&theme=default&show_offline=true&background_color=121212&interchange=false&profanity=false">
-    <img src="https://spotify-recently-played-readme.vercel.app/api?user=31srbzvb27scwh7hglzkmnknajpq" >
-</p>
-
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&height=60&section=footer" />
+  <img src="./svg/contribution-city.svg" width="100%" alt="Contribution city: an isometric night skyline with one building per day of the last year, taller and brighter for busier days. 2,173 contributions, busiest day November 30 with 52.">
 </p>
 
 <!-- Biểu đồ hoạt động -->

@@ -1,0 +1,54 @@
+name: Update contribution city
+
+on:
+  schedule:
+    - cron: "17 17 * * *"     # daily at 17:17 UTC (00:17 Vietnam time)
+  workflow_dispatch:          # "Run workflow" button on the Actions tab
+  push:
+    branches: [main]
+    paths:                    # re-render right away when the generator itself changes
+      - "tools/city/*.py"
+      - ".github/workflows/update-city.yml"
+
+permissions:
+  contents: write             # needed to commit the refreshed files
+
+concurrency:
+  group: update-city
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # pinned so the embedded fonts stay byte-identical between runs
+      - name: Install dependencies
+        run: pip install fonttools==4.62.1 brotli==1.2.0
+
+      - name: Fetch contributions
+        env:
+          PROFILE_TOKEN: ${{ secrets.PROFILE_TOKEN }}   # optional: adds private contributions
+          GITHUB_TOKEN: ${{ github.token }}             # fallback: public data only
+        run: python tools/city/fetch.py
+
+      - name: Render city
+        run: python tools/city/render.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/city/data svg/contribution-city.svg README.md
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Refresh contribution city"
+            git push
+          fi
