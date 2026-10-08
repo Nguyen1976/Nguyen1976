@@ -53,7 +53,7 @@
 <br>
 
 <p align="center">
-  <img src="./svg/contribution-city.svg" width="744" alt="Contribution city: a 3D skyline with one building per day of the last year, taller and brighter for busier days. 2,924 contributions over 319 active days, busiest day November 30 with 52.">
+  <img src="./svg/contribution-city.svg" width="744" alt="Contribution city: a 3D skyline with one building per day of the last year, taller and brighter for busier days. 2,928 contributions over 320 active days, busiest day November 30 with 52.">
 </p>
 
 <!-- Biểu đồ hoạt động -->
